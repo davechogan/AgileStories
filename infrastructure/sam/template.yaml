@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  OpenAIApiKey:
+    Type: String
+    Description: OpenAI API Key
+    NoEcho: true
+  VpcId:
+    Type: String
+    Description: VPC ID for Lambda functions
+  SubnetIds:
+    Type: List<String>
+    Description: Subnet IDs for Lambda functions
+
+Globals:
+  Function:
+    Timeout: 60
+    Runtime: python3.9
+    MemorySize: 256
+    VpcConfig:
+      SecurityGroupIds: 
+        - !Ref SecurityGroupIds
+      SubnetIds: !Ref SubnetIds
+    Environment:
+      Variables:
+        OPENAI_API_KEY: !Ref OpenAIApiKey
+
+Resources:
+  AgileCoachFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ai/agents/agile_coach/
+      Handler: lambda_handler.lambda_handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /analyze-story
+            Method: post
+
+  SeniorDevFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ai/agents/senior_dev/
+      Handler: lambda_handler.lambda_handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /review-story
+            Method: post
+
+  BrandingConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/app/core/branding/
+      Handler: lambda_handler.lambda_handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /branding-config
+            Method: get

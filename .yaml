@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  OpenAIApiKey:
+    Type: String
+    Description: OpenAI API Key
+    NoEcho: true
+
+Globals:
+  Function:
+    Timeout: 60
+    Runtime: python3.9
+    MemorySize: 256
+
+Resources:
+  AgileCoachFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ai/agents/agile_coach/
+      Handler: lambda_handler.lambda_handler
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OpenAIApiKey
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /analyze-story
+            Method: post
