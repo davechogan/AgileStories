@@ -1,0 +1,9 @@
+{
+  "body": {
+    "story": "As a product owner, I want to create better user stories",
+    "acceptance_criteria": [
+      "Story follows INVEST principles",
+      "Technical feasibility is assessed"
+    ]
+  }
+} 

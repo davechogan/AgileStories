@@ -1,11 +1,11 @@
 def lambda_handler(event, context):
     """
-    Test handler for the Agile Coach Lambda function
+    Test handler for the Branding Config Lambda function
     """
     return {
         'statusCode': 200,
         'body': {
-            'message': 'Agile Coach function executed successfully',
+            'message': 'Branding Config function executed successfully',
             'input': event
         }
-    }
+    } 
