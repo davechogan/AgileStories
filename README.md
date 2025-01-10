@@ -126,3 +126,65 @@ sam deploy --guided
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+# Project Structure
+
+AgileStories/
+├── frontend/                 # Vue.js frontend application
+│   └── src/
+│       ├── components/
+│       │   ├── story/
+│       │   ├── branding/
+│       │   └── theme/
+│       ├── composables/
+│       │   ├── useTheme.ts
+│       │   └── useBranding.ts
+│       ├── styles/
+│       │   ├── themes/
+│       │   │   ├── light.scss
+│       │   │   └── dark.scss
+│       │   └── white-label.scss
+│       └── graphql/
+│           ├── queries/
+│           └── mutations/
+├── backend/                  # FastAPI backend application
+│   └── app/
+│       ├── api/
+│       │   ├── graphql/
+│       │   └── rest/
+│       ├── core/
+│       │   ├── branding/
+│       │   │   └── lambda_handler.py
+│       │   └── story/
+│       └── config/
+│           └── white_label/
+├── ai/                      # AI agents and models
+│   ├── agents/
+│   │   ├── agile_coach/
+│   │   │   ├── lambda_handler.py
+│   │   │   ├── prompts/
+│   │   │   │   └── white_label_templates/
+│   │   │   └── validators/
+│   │   └── senior_dev/
+│   │       ├── lambda_handler.py
+│   │       ├── prompts/
+│   │       └── validators/
+│   └── shared/
+│       ├── base_agent.py
+│       └── story_schema.py
+├── infrastructure/          # Infrastructure as Code
+│   ├── terraform/
+│   │   ├── vpc/
+│   │   ├── lambda/
+│   │   └── s3/
+│   └── sam/
+│       └── template.yaml
+├── db/                     # Database migrations and schemas
+│   ├── migrations/
+│   └── schemas/
+│       ├── branding.sql
+│       └── stories.sql
+├── events/                 # Test events for Lambda functions
+│   ├── analyze-story-event.json
+│   ├── review-story-event.json
+│   └── branding-config-event.json
+└── README.md
