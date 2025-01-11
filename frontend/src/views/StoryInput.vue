@@ -43,6 +43,20 @@
             ></v-textarea>
           </div>
         </div>
+        <div class="sticky-footer">
+          <div class="footer-content">
+            <v-btn 
+              color="primary" 
+              size="large"
+              prepend-icon="mdi-magic-staff"
+              :loading="storyStore.loading"
+              :disabled="!isValid"
+              @click="submitStory"
+            >
+              Improve Story
+            </v-btn>
+          </div>
+        </div>
       </div>
 
       <!-- Right Column: Guidelines -->
@@ -102,12 +116,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStoryStore } from '@/stores/story'
 
 const router = useRouter()
+const storyStore = useStoryStore()
+
 const context = ref('')
 const userStory = ref('')
 const acceptanceCriteria = ref('')
-const loading = ref(false)
 
 const isValid = computed(() => {
   return userStory.value.trim() && acceptanceCriteria.value.trim()
@@ -116,30 +132,14 @@ const isValid = computed(() => {
 const submitStory = async () => {
   if (!isValid.value) return
   
-  loading.value = true
-  try {
-    // Send to backend
-    const response = await fetch('/api/story/improve', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        story: userStory.value,
-        acceptanceCriteria: acceptanceCriteria.value,
-        context: context.value
-      })
-    })
+  const success = await storyStore.submitForImprovement(
+    userStory.value,
+    acceptanceCriteria.value,
+    context.value
+  )
 
-    if (response.ok) {
-      // Navigate to AgileReview on success
-      router.push('/test-format')  // We'll update this to /AgileReview later
-    } else {
-      // Handle error
-      console.error('Failed to submit story')
-    }
-  } finally {
-    loading.value = false
+  if (success) {
+    router.push('/AgileReview')
   }
 }
 </script>
