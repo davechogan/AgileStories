@@ -1,4 +1,14 @@
 export const mockTechReviewResult = {
+  improved_story: {
+    text: "As a user, I want to see a new notification bell icon when I first log in for the day, so that I can be alerted if there is a broadcast message that is relevant to me.",
+    acceptance_criteria: [
+      "The notification bell icon should only appear on the user's first login of the day",
+      "The notification bell icon should be clearly visible and distinct from other icons",
+      "The notification bell icon should disappear after the user has viewed the broadcast message",
+      "Broadcast messages should be easily readable and accessible from the notification bell icon",
+      "All users should receive broadcast messages simultaneously"
+    ]
+  },
   technical_analysis: {
     feasibility: {
       score: 8,
