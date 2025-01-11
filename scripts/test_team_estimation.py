@@ -37,6 +37,7 @@ from ai.agents.team.junior_dev import JuniorDev
 from ai.agents.team.grad_dev import GradDev
 from ai.agents.team.senior_qa import SeniorQA
 from ai.agents.team.junior_qa import JuniorQA
+from ai.agents.team.ux_designer import UXDesigner
 
 def print_estimate(response):
     """Pretty print a team member's estimate"""
@@ -140,7 +141,8 @@ Implementation Details:
         JuniorDev(),
         GradDev(),
         SeniorQA(),
-        JuniorQA()
+        JuniorQA(),
+        UXDesigner()
     ]
     
     # Get estimates in parallel
