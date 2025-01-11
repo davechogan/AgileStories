@@ -3,6 +3,7 @@ import sys
 import json
 from dotenv import load_dotenv
 import openai
+import concurrent.futures
 
 # Add the project root to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,8 +47,6 @@ def print_estimate(response):
         print(f"Experience: {member['experience']} years")
         print("\nAnalysis:")
         print(body['analysis'])
-        print("\nRaw Response:")
-        print(json.dumps(body, indent=2))  # Show the complete response structure
         print("="*80)
     else:
         print(f"\nError: {response.get('body', 'Unknown error')}")
@@ -61,19 +60,15 @@ def calculate_average_estimate(responses):
             member = body['team_member']
             analysis = body['analysis']
             
-            print(f"\nDEBUG: Parsing estimate for {member['name']}")
-            # Print each line containing 'Person-days'
+            # Extract person-days from the analysis
             for line in analysis.split('\n'):
-                if 'Person-days' in line:
-                    print(f"Found line: '{line}'")
+                if 'Person-days:' in line:
                     try:
-                        # Extract number after the colon
                         estimate = float(line.split(':')[1].strip())
                         estimates.append(estimate)
-                        print(f"Successfully parsed estimate: {estimate}")
                         break
                     except Exception as e:
-                        print(f"Error parsing line: {e}")
+                        print(f"Error parsing estimate from {member['name']}: {e}")
             
     if estimates:
         avg = sum(estimates) / len(estimates)
@@ -84,6 +79,29 @@ def calculate_average_estimate(responses):
         print("="*80)
     else:
         print("\nNo valid estimates found")
+
+def get_team_estimates_parallel(team, test_event):
+    """Get estimates from all team members in parallel"""
+    print("\nGathering team estimates in parallel...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=7) as executor:
+        # Start all estimation tasks
+        future_to_member = {
+            executor.submit(member.estimate_effort, test_event): member 
+            for member in team
+        }
+        
+        # Process responses as they complete
+        responses = []
+        for future in concurrent.futures.as_completed(future_to_member):
+            member = future_to_member[future]
+            try:
+                response = future.result()
+                responses.append(response)
+                print_estimate(response)
+            except Exception as e:
+                print(f"\nError getting estimate from {member.name}: {e}")
+    
+    return responses
 
 def main():
     # Load environment variables first
@@ -125,13 +143,8 @@ Implementation Details:
         JuniorQA()
     ]
     
-    # Get estimates from each team member
-    responses = []
-    print("\nGathering team estimates...")
-    for member in team:
-        response = member.estimate_effort(test_event)
-        responses.append(response)
-        print_estimate(response)
+    # Get estimates in parallel
+    responses = get_team_estimates_parallel(team, test_event)
     
     # Calculate and show average estimate
     calculate_average_estimate(responses)
