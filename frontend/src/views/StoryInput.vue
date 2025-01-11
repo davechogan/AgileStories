@@ -53,6 +53,7 @@
               :loading="loading"
               :disabled="!isValid"
               @click="submitStory"
+              size="large"
             >
               Analyze Story
             </v-btn>
@@ -181,11 +182,14 @@ const submitStory = async () => {
   bottom: 0;
   background: rgb(18, 18, 18);
   padding: 1rem 0;
+  width: 100%;
+  z-index: 1;
 }
 
 .footer-content {
   display: flex;
   justify-content: flex-end;
+  padding: 0 1rem;
 }
 
 .criteria-item {
