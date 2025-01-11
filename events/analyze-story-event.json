@@ -1,6 +1,9 @@
 {
   "body": {
-    "story": "As a product owner, I want to create better user stories",
-    "context": "SAFe agile methodology"
+    "story": "As a unified platform user I want the max number of daily recurrences to be '6' so that I can setup a schedule that will run every 6 days.",
+    "acceptance_criteria": [
+      "Verify that if a user is creating/editing a schedule with 'Interval' set to 'Daily', that the max number in 'Recur Every' is 6"
+    ],
+    "context": "Schedule configuration feature"
   }
 } 
