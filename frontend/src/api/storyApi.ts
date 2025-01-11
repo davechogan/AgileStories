@@ -53,23 +53,17 @@ const transformAnalysis = (rawAnalysis: AnalysisResult): MockAnalysisResult => {
     }
   })
 
-  // Extract suggestions from the analysis text
-  const suggestionLines = rawAnalysis.analysis
-    .split('\n')
-    .filter(line => line.includes('Suggestions:'))
-    .flatMap(section => 
-      section.split('\n')
-        .filter(line => line.trim().startsWith('-'))
-    )
+  // Extract suggestions with new format
+  const additionalSuggestions = rawAnalysis.analysis
+    .split('Additional Suggestions:')
+    .pop()
+    ?.trim()
 
-  // Transform suggestions into key-value pairs
-  const suggestions: Record<string, string> = {}
-  suggestionLines.forEach(line => {
-    const [key, ...value] = line.replace('-', '').trim().split(':')
-    if (key && value.length) {
-      suggestions[key.trim()] = value.join(':').trim()
-    }
-  })
+  const suggestions: Record<string, string> = additionalSuggestions 
+    ? {
+        'Improvements': additionalSuggestions
+      }
+    : rawAnalysis.suggestions || {}
 
   return {
     improved_story: {
@@ -77,7 +71,7 @@ const transformAnalysis = (rawAnalysis: AnalysisResult): MockAnalysisResult => {
       acceptance_criteria: rawAnalysis.improved_story?.acceptance_criteria || []
     },
     invest_analysis: investAnalysis,
-    suggestions: Object.keys(suggestions).length ? suggestions : rawAnalysis.suggestions || {}
+    suggestions
   }
 }
 

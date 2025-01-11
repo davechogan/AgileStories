@@ -7,17 +7,40 @@
           <div class="story-section">
             <h3>Improved Story</h3>
             <div class="editable-content">
-              <pre>{{ analysis.improved_story.text }}</pre>
+              <v-textarea
+                v-model="analysis.improved_story.text"
+                variant="outlined"
+                auto-grow
+                rows="3"
+              />
             </div>
             
             <h3>Enhanced Acceptance Criteria</h3>
             <div class="editable-content">
-              <ul>
-                <li v-for="(criterion, index) in analysis.improved_story.acceptance_criteria" 
-                    :key="index">
-                  {{ criterion }}
-                </li>
-              </ul>
+              <div v-for="(criteria, index) in analysis.improved_story.acceptance_criteria" 
+                   :key="index"
+                   class="criteria-item">
+                <v-textarea
+                  v-model="analysis.improved_story.acceptance_criteria[index]"
+                  variant="outlined"
+                  auto-grow
+                  rows="1"
+                />
+                <v-btn 
+                  icon="mdi-delete" 
+                  size="small"
+                  color="error" 
+                  variant="text"
+                  @click="removeCriteria(index)"
+                />
+              </div>
+              <v-btn 
+                prepend-icon="mdi-plus"
+                variant="text"
+                @click="addCriteria"
+              >
+                Add Criteria
+              </v-btn>
             </div>
           </div>
         </div>
@@ -85,10 +108,18 @@ onMounted(() => {
 
 const analysis = computed(() => storyStore.currentAnalysis)
 
-// Add this function to detect negative feedback
+// Functions to manage acceptance criteria
+const addCriteria = () => {
+  analysis.value.improved_story.acceptance_criteria.push('')
+}
+
+const removeCriteria = (index: number) => {
+  analysis.value.improved_story.acceptance_criteria.splice(index, 1)
+}
+
 const isNegative = (content: string): boolean => {
-  const negativeTerms = ['not', 'too vague', 'unclear', 'missing'];
-  return negativeTerms.some(term => content.toLowerCase().includes(term));
+  const negativeTerms = ['not', 'too vague', 'unclear', 'missing']
+  return negativeTerms.some(term => content.toLowerCase().includes(term))
 }
 </script>
 
@@ -106,4 +137,17 @@ const isNegative = (content: string): boolean => {
 }
 
 /* ... rest of styles from TestFormatView.vue ... */
+
+.criteria-item {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.editable-content {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 1rem;
+}
 </style> 

@@ -1,18 +1,13 @@
 import { defineStore } from 'pinia'
-import type { AnalysisResult } from '@/types'
 
 export const useStoryStore = defineStore('story', {
   state: () => ({
-    currentAnalysis: null as AnalysisResult | null
+    currentAnalysis: null
   }),
   
   actions: {
-    setAnalysis(analysis: AnalysisResult) {
+    setCurrentAnalysis(analysis) {
       this.currentAnalysis = analysis
-    },
-    
-    clearAnalysis() {
-      this.currentAnalysis = null
     }
   }
 }) 
