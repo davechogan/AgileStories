@@ -13,13 +13,27 @@ def print_analysis_result(result):
     print("\n" + "="*80)
     print("ANALYSIS RESULT")
     print("="*80)
-    print(f"\nStatus: {result.status.value}")
-    print(f"\nAnalysis:\n{result.analysis}")
-    if result.improved_story:
-        print(f"\nImproved Story:\n{result.improved_story.text}")
-        print("\nEnhanced Acceptance Criteria:")
-        for ac in result.improved_story.acceptance_criteria:
-            print(f"- {ac}")
+    
+    # Handle both AnalysisResult objects and dictionaries
+    if hasattr(result, 'status'):
+        # It's an AnalysisResult object
+        print(f"\nStatus: {result.status.value}")
+        print(f"\nAnalysis:\n{result.analysis}")
+        if result.improved_story:
+            print(f"\nImproved Story:\n{result.improved_story.text}")
+            print("\nEnhanced Acceptance Criteria:")
+            for ac in result.improved_story.acceptance_criteria:
+                print(f"- {ac}")
+    else:
+        # It's a dictionary
+        print(f"\nStatus: {result['status']}")
+        print(f"\nAnalysis:\n{result['analysis']}")
+        if result.get('improved_story'):
+            print(f"\nImproved Story:\n{result['improved_story']['text']}")
+            print("\nEnhanced Acceptance Criteria:")
+            for ac in result['improved_story']['acceptance_criteria']:
+                print(f"- {ac}")
+    
     print("\n" + "="*80 + "\n")
 
 def get_user_input(prompt):
@@ -32,7 +46,6 @@ def get_user_input(prompt):
 
 def run_workflow():
     """Run the story analysis workflow with CLI interaction"""
-    # Initialize analyzer
     analyzer = StoryAnalyzer()
     
     # Get initial story input
@@ -62,47 +75,24 @@ def run_workflow():
     result = analyzer.start_analysis(story)
     print_analysis_result(result)
     
-    # Get user feedback on Agile Coach analysis
-    if result.status != AnalysisStatus.ERROR:
+    # Handle both object and dictionary status
+    status = result.status if hasattr(result, 'status') else result['status']
+    if status != AnalysisStatus.ERROR:
         approved = get_user_input("\nDo you approve these changes? (y/n): ")
         
-        if not approved:
-            print("\nWould you like to edit the story?")
-            if get_user_input("Edit story? (y/n): "):
-                # Get edited story
-                print("\nEnter your edited story:")
-                edited_text = input("\nStory: ")
-                print("\nEnter edited acceptance criteria (one per line, empty line to finish):")
-                edited_ac = []
-                while True:
-                    criterion = input()
-                    if not criterion:
-                        break
-                    edited_ac.append(criterion)
-                
-                edited_story = Story(
-                    text=edited_text,
-                    acceptance_criteria=edited_ac,
-                    context=context,
-                    version=story.version + 1
-                )
-                result = analyzer.process_user_feedback(result, False, edited_story)
-            else:
-                print("\nCancelling analysis...")
-                return
-        else:
+        if approved:
             # Move to technical review
             result = analyzer.process_user_feedback(result, True)
             print("\nStarting Technical review...")
             print_analysis_result(result)
             
             # Get user feedback on Technical review
-            if result.status != AnalysisStatus.ERROR:
+            status = result.status if hasattr(result, 'status') else result['status']
+            if status != AnalysisStatus.ERROR:
                 approved = get_user_input("\nDo you approve the technical analysis? (y/n): ")
                 if approved:
-                    result = analyzer.process_user_feedback(result, True)
                     print("\nAnalysis complete!")
-                    print_analysis_result(result)
+                    print_analysis_result(result)  # Just show final result
                 else:
                     print("\nWould you like to edit the story?")
                     if get_user_input("Edit story? (y/n): "):

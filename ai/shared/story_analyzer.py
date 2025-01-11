@@ -1,10 +1,21 @@
 import os
 import json
+import sys
 import boto3
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
+import traceback
+
+# Debug logging
+print("StoryAnalyzer: Python path:", sys.path)
+print("StoryAnalyzer: Current directory:", os.getcwd())
+try:
+    import openai
+    print("StoryAnalyzer: OpenAI package found:", openai.__file__)
+except Exception as e:
+    print("StoryAnalyzer: Error importing openai:", str(e))
 
 @dataclass
 class Story:
@@ -48,22 +59,35 @@ class StoryAnalyzer:
     """Handles sequential story analysis workflow"""
     
     def __init__(self):
-        """Initialize with SAM local endpoint"""
-        self.lambda_client = boto3.client(
-            'lambda',
-            endpoint_url='http://localhost:3001',  # SAM local endpoint
-            region_name='us-east-1',
-            aws_access_key_id='dummy',
-            aws_secret_access_key='dummy',
-            verify=False
-        )
+        """Initialize the StoryAnalyzer"""
+        # Import OpenAI here to ensure environment is loaded
+        import openai
+        
+        # Configure OpenAI
+        openai.api_key = os.getenv('OPENAI_API_KEY')
+        openai.organization = os.getenv('OPENAI_ORG_ID')
+        
+        # No need for Lambda client if we're calling functions directly
+        self.agile_coach = __import__('ai.agents.agile_coach.lambda_handler', fromlist=['lambda_handler']).lambda_handler
+        self.senior_dev = __import__('ai.agents.senior_dev.lambda_handler', fromlist=['lambda_handler']).lambda_handler
     
     def start_analysis(self, story: Story) -> AnalysisResult:
         """
         Start the analysis workflow with Agile Coach review
         """
         try:
-            # Prepare the event payload
+            print(f"StoryAnalyzer.start_analysis: Starting with story: {story}")
+            # Add more detailed logging here
+            try:
+                import openai
+                print("OpenAI import successful in start_analysis")
+            except Exception as e:
+                print(f"OpenAI import failed in start_analysis: {str(e)}")
+                print(f"Current sys.path: {sys.path}")
+            
+            print(f"Starting analysis for story: {story.text}")
+            
+            # Create the event structure for Lambda
             event = {
                 'body': {
                     'story': story.text,
@@ -72,9 +96,11 @@ class StoryAnalyzer:
                 }
             }
             
-            # Get Agile Coach analysis
-            agile_response = self._invoke_lambda('AgileCoachFunction', event)
-            return self._parse_lambda_response(agile_response, story, AnalysisStatus.AGILE_REVIEW)
+            # Call the Agile Coach Lambda handler
+            from ai.agents.agile_coach.lambda_handler import lambda_handler
+            response = lambda_handler(event, None)
+            
+            return self._parse_lambda_response(response, story, AnalysisStatus.AGILE_REVIEW)
             
         except Exception as e:
             print(f"Error in start_analysis: {str(e)}")
@@ -86,54 +112,98 @@ class StoryAnalyzer:
                 status=AnalysisStatus.ERROR
             )
     
-    def process_user_feedback(self, result: AnalysisResult, approved: bool, edited_story: Optional[Story] = None) -> AnalysisResult:
-        """
-        Process user feedback and move to next step
-        """
+    def _get_value(self, obj, key, default=None):
+        """Get value from either object attribute or dictionary key"""
+        if hasattr(obj, key):
+            return getattr(obj, key)
+        elif isinstance(obj, dict):
+            return obj.get(key, default)
+        return default
+    
+    def process_user_feedback(self, analysis_result, approved: bool) -> Dict[str, Any]:
+        """Process user feedback on analysis"""
         try:
             print("\n=== Processing User Feedback ===")
-            print(f"Current status: {result.status}")
-            print(f"Approved: {approved}")
+            print("Analysis Result:")
+            print("- Status:", self._get_value(analysis_result, 'status'))
+            print("- Has improved story:", bool(self._get_value(analysis_result, 'improved_story')))
             
-            if not approved and edited_story:
-                print(f"\nRestarting with edited story: {edited_story.text}")
-                return self.start_analysis(edited_story)
-                
-            if approved and result.status == AnalysisStatus.AGILE_REVIEW:
-                # Make sure we use the improved story from Agile Coach
-                if result.improved_story:
-                    print("\nUser approved Agile review. Using improved story:")
-                    print(f"Original story: {result.original_story.text}")
-                    print(f"Improved story: {result.improved_story.text}")
-                    print(f"Enhanced acceptance criteria: {result.improved_story.acceptance_criteria}")
-                    return self.technical_review(result.improved_story)
+            if approved:
+                # Extract story from the analysis result
+                story_data = None
+                improved_story = self._get_value(analysis_result, 'improved_story')
+                if improved_story:
+                    story_data = improved_story if isinstance(improved_story, Story) else Story(**improved_story)
                 else:
-                    print("\nNo improved story found, using original")
-                    return self.technical_review(result.original_story)
+                    original_story = self._get_value(analysis_result, 'original_story')
+                    story_data = original_story if isinstance(original_story, Story) else Story(**original_story)
                 
-            if approved and result.status == AnalysisStatus.TECHNICAL_REVIEW:
-                print("\nUser approved Technical review. Analysis complete!")
-                result.status = AnalysisStatus.COMPLETE
-                return result
+                # Create event for Lambda
+                event = {
+                    'body': {
+                        'story': story_data.text,
+                        'acceptance_criteria': story_data.acceptance_criteria,
+                        'context': story_data.context
+                    }
+                }
                 
-            print("\nUser rejected without edits")
-            return AnalysisResult(
-                original_story=result.original_story,
-                improved_story=None,
-                analysis="User rejected without providing edits",
-                suggestions={},
-                status=AnalysisStatus.ERROR
-            )
-            
+                try:
+                    # Call Senior Dev function directly
+                    print("Calling Senior Dev function...")
+                    result = self.senior_dev(event, None)
+                    print("Raw Senior Dev result:", result)
+                    print("Result type:", type(result))
+                    
+                    if isinstance(result, str):
+                        result = json.loads(result)
+                    if isinstance(result.get('body'), str):
+                        result['body'] = json.loads(result['body'])
+                    
+                    print("Processed Senior Dev result:", json.dumps(result, indent=2))
+                    
+                    return {
+                        'original_story': story_data.to_dict(),
+                        'improved_story': story_data.to_dict() if improved_story else None,
+                        'analysis': result.get('body', {}).get('analysis', ''),
+                        'suggestions': result.get('body', {}).get('suggestions', {}),
+                        'status': 'technical_review',
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    
+                except Exception as e:
+                    print("\nError in Senior Dev call:")
+                    print("Exception:", str(e))
+                    print("Event data:", json.dumps(event, indent=2))
+                    import traceback
+                    print("Full traceback:", traceback.format_exc())
+                    raise
+                    
+            else:
+                return {
+                    'status': 'input',
+                    'message': 'Story rejected, returning to input',
+                    'original_story': self._get_value(analysis_result, 'original_story'),
+                    'improved_story': None,
+                    'analysis': '',
+                    'suggestions': {},
+                    'timestamp': datetime.now().isoformat()
+                }
+                
         except Exception as e:
-            print(f"Error in process_user_feedback: {str(e)}")
-            return AnalysisResult(
-                original_story=result.original_story,
-                improved_story=None,
-                analysis=str(e),
-                suggestions={},
-                status=AnalysisStatus.ERROR
-            )
+            print("\nError in process_user_feedback:")
+            print("Exception:", str(e))
+            print("Raw analysis_result:", json.dumps(analysis_result, indent=2))
+            import traceback
+            print("Full traceback:", traceback.format_exc())
+            return {
+                'status': 'error',
+                'message': str(e),
+                'original_story': self._get_value(analysis_result, 'original_story'),
+                'improved_story': None,
+                'analysis': '',
+                'suggestions': {},
+                'timestamp': datetime.now().isoformat()
+            }
     
     def technical_review(self, story: Story) -> AnalysisResult:
         """
@@ -228,41 +298,78 @@ class StoryAnalyzer:
             )
     
     def _extract_improved_story(self, analysis: str, original_story: Story) -> Optional[Story]:
-        """
-        Extract improved story from analysis text.
-        """
+        """Extract improved story from analysis text."""
         try:
-            print("\nFull analysis text for extraction:")
-            print(analysis)  # Debug log
+            print("\n=== Extracting Improved Story ===")
+            print("Full analysis text:")
+            print(analysis)
             
-            # Look for improved story section in the analysis
-            improved_story_marker = "2. Improved version of the story:"
-            acceptance_criteria_marker = "3. Enhanced acceptance criteria:"
+            # Look for improved story section with flexible matching
+            possible_markers = [
+                "\nImproved Story:\n",
+                "Improved Story:",
+                "\nImproved User Story:\n",
+                "\nEnhanced Story:\n",
+                "\nIMPROVED STORY:\n"
+            ]
             
-            # Find the sections
-            story_start = analysis.find(improved_story_marker)
+            # Find the story section
+            story_start = -1
+            for marker in possible_markers:
+                story_start = analysis.find(marker)
+                if story_start != -1:
+                    print(f"Found marker: '{marker}' at position {story_start}")
+                    story_start += len(marker)
+                    break
+            
             if story_start == -1:
-                print("No improved story marker found")
+                print("No story marker found in text:")
+                print("---")
+                print(analysis)
+                print("---")
                 return None
                 
-            story_start += len(improved_story_marker)
-            story_end = analysis.find("4. Questions for clarification:", story_start)
+            # Find acceptance criteria section
+            possible_ac_markers = [
+                "\nEnhanced Acceptance Criteria:\n",
+                "\nAcceptance Criteria:\n",
+                "Enhanced Acceptance Criteria:",
+                "Acceptance Criteria:",
+                "\nACCEPTANCE CRITERIA:\n"
+            ]
+            
+            story_end = -1
+            for marker in possible_ac_markers:
+                story_end = analysis.find(marker, story_start)
+                if story_end != -1:
+                    print(f"Found AC marker: '{marker}' at position {story_end}")
+                    break
+            
             if story_end == -1:
                 story_end = len(analysis)
                 
             # Extract and clean the story text
             story_text = analysis[story_start:story_end].strip()
-            print(f"\nExtracted story text: {story_text}")
+            print(f"\nExtracted story text: '{story_text}'")
             
             # Extract acceptance criteria
-            ac_start = analysis.find(acceptance_criteria_marker)
+            ac_start = -1
+            for marker in possible_ac_markers:
+                ac_start = analysis.find(marker)
+                if ac_start != -1:
+                    print(f"Found AC marker for extraction: '{marker}'")
+                    ac_start += len(marker)
+                    break
+            
             acceptance_criteria = []
             if ac_start != -1:
-                ac_start += len(acceptance_criteria_marker)
-                ac_end = analysis.find("4. Questions for clarification:", ac_start)
+                ac_end = analysis.find("\nAdditional Suggestions:", ac_start)
                 if ac_end == -1:
                     ac_end = len(analysis)
+                
                 ac_text = analysis[ac_start:ac_end].strip()
+                print(f"\nRaw AC text:\n{ac_text}")
+                
                 acceptance_criteria = [
                     criterion.strip('- ').strip()
                     for criterion in ac_text.split('\n')
@@ -270,13 +377,20 @@ class StoryAnalyzer:
                 ]
                 print(f"\nExtracted acceptance criteria: {acceptance_criteria}")
             
-            return Story(
-                text=story_text,
-                acceptance_criteria=acceptance_criteria,
-                context=original_story.context,
-                version=original_story.version + 1
-            )
+            if story_text and acceptance_criteria:
+                improved_story = Story(
+                    text=story_text,
+                    acceptance_criteria=acceptance_criteria,
+                    context=original_story.context,
+                    version=original_story.version + 1
+                )
+                print(f"\nCreated improved story: {improved_story}")
+                return improved_story
+                
+            print("\nMissing story text or acceptance criteria")
+            return None
             
         except Exception as e:
             print(f"Error extracting improved story: {str(e)}")
+            print(f"Full traceback: {traceback.format_exc()}")
             return None 
