@@ -1,0 +1,11 @@
+{
+  "body": {
+    "story": "As a user, I want to be able to reset my password so that I can regain access to my account if I forget it.",
+    "acceptance_criteria": [
+      "User can click 'Forgot Password' link on login page",
+      "System sends reset email to user's registered email",
+      "Reset link expires after 24 hours"
+    ],
+    "context": "Part of the user authentication system"
+  }
+} 

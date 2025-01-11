@@ -4,6 +4,10 @@ from typing import Dict, Any
 import openai
 from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
+
+# Define our base prompt template
 SENIOR_DEV_PROMPT = """You are an experienced Senior Developer reviewing user stories.
 Given the following user story and acceptance criteria, please review it for technical feasibility and implementation details:
 
@@ -34,27 +38,10 @@ Implementation Details:
 - Security: [Security considerations]
 - Testing: [Testing approach]"""
 
-def get_openai_key():
-    """Get OpenAI key from env.json"""
-    try:
-        with open('env.json', 'r') as f:
-            env_vars = json.load(f)
-            return env_vars['SeniorDevFunction']['OPENAI_API_KEY']
-    except Exception as e:
-        print(f"Error reading env.json: {e}")
-        return None
-
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    """
-    AWS Lambda handler for Senior Dev analysis
-    """
     try:
-        print("SeniorDev Lambda started")
+        print("\n=== Senior Dev Lambda Started ===")
         print(f"Event received: {json.dumps(event, indent=2)}")
-        
-        # Configure OpenAI directly from file
-        openai.api_key = get_openai_key()
-        print(f"OpenAI Key loaded: {bool(openai.api_key)}")
         
         # Get the story details from the event body
         if isinstance(event.get('body'), str):
@@ -62,32 +49,23 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         else:
             body = event.get('body', {})
             
-        print(f"Parsed body: {json.dumps(body, indent=2)}")
-        
         story_text = body.get('story', '')
         acceptance_criteria = body.get('acceptance_criteria', [])
         context = body.get('context', '')
         
-        if not story_text:
-            print("No story text provided")
-            return {
-                'statusCode': 400,
-                'body': json.dumps({
-                    'error': 'No story provided',
-                    'status': 'error'
-                })
-            }
+        print(f"\nStory Text: {story_text}")
+        print(f"\nAcceptance Criteria: {json.dumps(acceptance_criteria, indent=2)}")
         
-        if not openai.api_key:
-            return {
-                'statusCode': 500,
-                'body': json.dumps({
-                    'error': 'OpenAI API key not found in env.json',
-                    'status': 'error'
-                })
-            }
+        # Configure OpenAI
+        openai.api_key = os.getenv('OPENAI_API_KEY')
+        openai.organization = os.getenv('OPENAI_ORG_ID')
         
-        print("Making OpenAI API call...")
+        print("\nMaking OpenAI API call...")
+        print(f"OpenAI Key exists: {bool(openai.api_key)}")
+        print(f"OpenAI Org exists: {bool(openai.organization)}")
+        
+        # Format acceptance criteria for prompt
+        formatted_ac = "\n".join(f"- {ac}" for ac in acceptance_criteria)
         
         # Create the analysis
         response = openai.ChatCompletion.create(
@@ -96,7 +74,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 {"role": "system", "content": "You are an experienced Senior Developer."},
                 {"role": "user", "content": SENIOR_DEV_PROMPT.format(
                     story=story_text,
-                    acceptance_criteria="\n".join(f"- {ac}" for ac in acceptance_criteria),
+                    acceptance_criteria=formatted_ac,
                     context=context
                 )}
             ],
@@ -105,20 +83,20 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         
         analysis = response.choices[0].message.content
-        print(f"OpenAI Response: {analysis}")
+        print(f"\nOpenAI Response: {analysis}")
         
-        # Return the analysis in the correct format
+        # Return the actual analysis
         return {
             'statusCode': 200,
             'body': json.dumps({
                 'analysis': analysis,
                 'suggestions': {},
                 'status': 'success'
-            }, ensure_ascii=False)
+            })
         }
         
     except Exception as e:
-        print(f"Lambda handler error: {str(e)}")
+        print(f"\nLambda handler error: {str(e)}")
         import traceback
         print(f"Full traceback:\n{traceback.format_exc()}")
         return {

@@ -53,6 +53,25 @@ AgileStories/
 ├── infrastructure/ # Terraform and SAM templates
 └── db/ # Database migrations and schemas
 
+## Workflow
+graph TD
+    A[User Inputs Story via Frontend] --> B[ai/agents/agile_coach/lambda_handler.py]
+    B --> C[User Review via Frontend]
+    C -->|Reject| D[Edit Story]
+    D --> B
+    C -->|Accept| E[ai/agents/senior_dev/lambda_handler.py]
+    E --> F[Final User Review via Frontend]
+    F -->|Reject| G[Edit Story]
+    G --> E
+    F -->|Accept| H[Final Story in Frontend]
+
+    %% Testing Flow
+    I[events/analyze-story-event.json] -.->|Local Testing| B
+
+    %% Coordination
+    J[ai/shared/story_analyzer.py] -->|Manages Flow| B
+    J -->|Manages Flow| E
+    
 ## Getting Started
 
 ### Prerequisites
