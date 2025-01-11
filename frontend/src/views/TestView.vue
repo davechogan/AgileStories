@@ -74,93 +74,161 @@
         </button>
       </div>
 
-      <!-- Agile Coach Tab -->
-      <div v-show="activeTab === 'agileCoach'" class="tab-content">
-        <div class="workflow-step">
-          <h2>Agile Coach Review</h2>
-          <div v-if="currentAnalysis" class="story-output">
-            <div v-if="currentAnalysis.improved_story" class="improved-story">
-              <h3>Improved Story:</h3>
-              <pre>{{ currentAnalysis.improved_story.text }}</pre>
+      <v-window v-model="activeTab">
+        <!-- Agile Coach Tab -->
+        <v-window-item value="agileCoach">
+          <div class="workflow-step">
+            <h2>Agile Coach Review</h2>
+            <div v-if="currentAnalysis" class="story-output">
+              <div v-if="currentAnalysis.improved_story" class="improved-story">
+                <h3>Improved Story:</h3>
+                <pre>{{ currentAnalysis.improved_story.text }}</pre>
+                
+                <h3>Enhanced Acceptance Criteria:</h3>
+                <ul>
+                  <li v-for="(criterion, index) in currentAnalysis.improved_story.acceptance_criteria" 
+                      :key="index">
+                    {{ criterion }}
+                  </li>
+                </ul>
+              </div>
               
-              <h3>Enhanced Acceptance Criteria:</h3>
-              <ul>
-                <li v-for="(criterion, index) in currentAnalysis.improved_story.acceptance_criteria" 
-                    :key="index">
-                  {{ criterion }}
-                </li>
-              </ul>
+              <div class="analysis">
+                <h3>Analysis:</h3>
+                <pre>{{ currentAnalysis.analysis }}</pre>
+              </div>
+
+              <div v-if="currentAnalysis.suggestions" class="suggestions">
+                <h3>Suggestions:</h3>
+                <ul>
+                  <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
+                      :key="key">
+                    <strong>{{ key }}:</strong> {{ suggestion }}
+                  </li>
+                </ul>
+              </div>
             </div>
             
-            <div class="analysis">
-              <h3>Analysis:</h3>
-              <pre>{{ currentAnalysis.analysis }}</pre>
-            </div>
-
-            <div v-if="currentAnalysis.suggestions" class="suggestions">
-              <h3>Suggestions:</h3>
-              <ul>
-                <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
-                    :key="key">
-                  <strong>{{ key }}:</strong> {{ suggestion }}
-                </li>
-              </ul>
+            <div class="action-buttons">
+              <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
+              <button @click="approveAnalysis" :disabled="isProcessing">Accept & Continue</button>
             </div>
           </div>
-          
-          <div class="action-buttons">
-            <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
-            <button @click="approveAnalysis" :disabled="isProcessing">Accept & Continue</button>
-          </div>
-        </div>
-      </div>
+        </v-window-item>
 
-      <!-- Technical Review Tab -->
-      <div v-show="activeTab === 'technical'" class="tab-content">
-        <div class="workflow-step">
-          <h2>Technical Review</h2>
-          <div v-if="currentAnalysis" class="story-output">
-            <div class="analysis">
-              <h3>Technical Analysis:</h3>
-              <pre>{{ currentAnalysis.analysis }}</pre>
+        <!-- Technical Review Tab -->
+        <v-window-item value="technical">
+          <div class="workflow-step">
+            <h2>Technical Review</h2>
+            <div v-if="currentAnalysis" class="story-output">
+              <div class="analysis">
+                <h3>Technical Analysis:</h3>
+                <pre>{{ currentAnalysis.analysis }}</pre>
+              </div>
+              
+              <div v-if="currentAnalysis.suggestions" class="suggestions">
+                <h3>Technical Suggestions:</h3>
+                <ul>
+                  <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
+                      :key="key">
+                    <strong>{{ key }}:</strong> {{ suggestion }}
+                  </li>
+                </ul>
+              </div>
+
+              <div class="improved-story">
+                <h3>Final Story:</h3>
+                <pre>{{ currentAnalysis.improved_story?.text }}</pre>
+                
+                <h3>Final Acceptance Criteria:</h3>
+                <ul>
+                  <li v-for="(criterion, index) in currentAnalysis.improved_story?.acceptance_criteria" 
+                      :key="index">
+                    {{ criterion }}
+                  </li>
+                </ul>
+              </div>
             </div>
             
-            <div v-if="currentAnalysis.suggestions" class="suggestions">
-              <h3>Technical Suggestions:</h3>
-              <ul>
-                <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
-                    :key="key">
-                  <strong>{{ key }}:</strong> {{ suggestion }}
-                </li>
-              </ul>
+            <div class="action-buttons">
+              <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
+              <button @click="approveAnalysis" :disabled="isProcessing">Accept & Complete</button>
+            </div>
+          </div>
+        </v-window-item>
+
+        <!-- Team Estimation Tab -->
+        <v-window-item value="estimation">
+          <div v-if="teamEstimates && teamEstimates.length > 0">
+            <h3>Team Estimates</h3>
+            
+            <!-- Circle layout with centered average -->
+            <div class="estimation-circle" :style="circleStyles">
+              <!-- Center average -->
+              <div class="average-estimate">
+                <div class="average-number">{{ averageEstimate }}</div>
+                <div class="average-label">days average</div>
+              </div>
+              
+              <!-- Team members -->
+              <div 
+                v-for="(member, index) in teamEstimates" 
+                :key="member.name"
+                class="team-member"
+                :style="getPositionStyle(index, teamEstimates.length)"
+              >
+                <v-avatar
+                  size="60"
+                  :color="member.color"
+                  class="member-avatar"
+                  @click="showMemberDetails(member)"
+                >
+                  <span class="text-h6 white--text">{{ member.initials }}</span>
+                </v-avatar>
+                <div class="member-info">
+                  <div class="member-name">{{ member.name }}</div>
+                  <div class="member-title">{{ member.title }}</div>
+                  <div class="member-estimate">{{ member.estimate }} days</div>
+                </div>
+              </div>
             </div>
 
-            <div class="improved-story">
-              <h3>Final Story:</h3>
-              <pre>{{ currentAnalysis.improved_story?.text }}</pre>
-              
-              <h3>Final Acceptance Criteria:</h3>
-              <ul>
-                <li v-for="(criterion, index) in currentAnalysis.improved_story?.acceptance_criteria" 
-                    :key="index">
-                  {{ criterion }}
-                </li>
-              </ul>
-            </div>
+            <!-- Member Details Modal -->
+            <v-dialog v-model="showModal" max-width="500">
+              <v-card v-if="selectedMember">
+                <v-card-title class="d-flex align-center">
+                  <v-avatar size="40" :color="selectedMember.color" class="mr-3">
+                    <span class="text-h6 white--text">{{ selectedMember.initials }}</span>
+                  </v-avatar>
+                  {{ selectedMember.name }}
+                </v-card-title>
+                <v-card-subtitle>{{ selectedMember.title }}</v-card-subtitle>
+                <v-card-text>
+                  <div class="text-h6 mb-2">Estimate: {{ selectedMember.estimate }} days</div>
+                  <div class="justification">{{ selectedMember.justification }}</div>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="primary" @click="showModal = false">Close</v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
           </div>
-          
-          <div class="action-buttons">
-            <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
-            <button @click="approveAnalysis" :disabled="isProcessing">Accept & Complete</button>
+          <div v-else>
+            <p>Loading team estimates...</p>
+            <v-progress-circular indeterminate></v-progress-circular>
           </div>
-        </div>
-      </div>
+        </v-window-item>
+      </v-window>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+
+// Add API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 interface Story {
   text: string;
@@ -349,11 +417,14 @@ const getRandomColor = (): string => {
 
 const getPositionStyle = (index: number, total: number) => {
   const angle = (index / total) * 2 * Math.PI - Math.PI / 2 // Start from top
-  const radius = 180 // Increased radius for 8 people
+  const radius = 200 // Radius of the circle
   const x = Math.cos(angle) * radius
   const y = Math.sin(angle) * radius
+  
   return {
-    transform: `translate(${x}px, ${y}px)`
+    transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+    left: '50%',
+    top: '50%'
   }
 }
 
@@ -370,8 +441,47 @@ const processTeamEstimates = (estimationData: any) => {
 }
 
 const circleStyles = {
+  position: 'relative',
   width: '500px',
-  height: '500px'
+  height: '500px',
+  margin: '3rem auto'
+}
+
+const getTeamEstimates = async () => {
+  try {
+    console.log("Getting team estimates...");
+    const response = await fetch(`${API_BASE_URL}/api/estimate/days`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        story: currentAnalysis.value?.original_story
+      })
+    });
+    
+    const data = await response.json();
+    console.log("Team estimates response:", data);
+    
+    if (data.team_estimates) {
+      teamEstimates.value = data.team_estimates;
+    }
+  } catch (error) {
+    console.error("Error getting team estimates:", error);
+  }
+};
+
+const showModal = ref(false)
+const selectedMember = ref<TeamMember | null>(null)
+const averageEstimate = computed(() => {
+  if (!teamEstimates.value.length) return 0
+  const total = teamEstimates.value.reduce((sum, member) => sum + member.estimate, 0)
+  return (total / teamEstimates.value.length).toFixed(1)
+})
+
+const showMemberDetails = (member: TeamMember) => {
+  selectedMember.value = member
+  showModal.value = true
 }
 </script>
 
@@ -550,15 +660,72 @@ h1, h2 {
 
 .estimation-circle {
   position: relative;
-  margin: 3rem auto;  /* Increased margin */
   border: 2px dashed #eee;
   border-radius: 50%;
 }
 
-/* Add title display */
+.average-estimate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: rgba(33, 150, 243, 0.1);
+  padding: 1rem;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.average-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2196F3;
+}
+
+.average-label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.team-member {
+  position: absolute;
+  text-align: center;
+  transition: all 0.3s ease;
+  width: 120px; /* Fixed width to center content */
+}
+
+.member-avatar {
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.member-avatar:hover {
+  transform: scale(1.1);
+}
+
+.member-info {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.member-name {
+  font-weight: bold;
+}
+
 .member-title {
+  color: #666;
   font-size: 0.7rem;
-  color: #888;
+}
+
+.member-estimate {
+  color: #2196F3;
+  font-weight: bold;
   margin-top: 0.2rem;
 }
 </style> 

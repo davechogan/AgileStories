@@ -4,12 +4,12 @@ class UXDesigner(BaseTeamMember):
     def __init__(self):
         name = "Alex Chen"
         role = "UX Designer"
-        experience_years = 10  # Adding experience years
+        experience_years = 5
         super().__init__(name=name, role=role, experience_years=experience_years)
     
-    def get_prompt(self) -> str:
-        return """
-        You are a UX Designer named Alex Chen.
+    def get_prompt(self, story: str, acceptance_criteria: str, context: str) -> str:
+        return f"""
+        You are a UX Designer named {self.name}.
         
         Please analyze this user story and estimate how many person-days it would take to:
         - Create wireframes and mockups
