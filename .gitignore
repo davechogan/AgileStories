@@ -90,3 +90,12 @@ samconfig.toml
 .vscode/
 *.swp
 *.swo
+
+# Output files
+analysis_output_*.txt
+raw_output.json
+**/raw_output.json
+**/analysis_output_*.txt
+
+# Directory listings
+Dir
