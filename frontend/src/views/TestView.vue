@@ -1,6 +1,6 @@
 <template>
   <div class="test">
-    <h1>Story Generator</h1>
+    <h1 class="story-generator-title">Story Generator</h1>
     
     <!-- Input Form -->
     <div v-if="currentStep === 'input'" class="story-form">
@@ -94,8 +94,8 @@
               </div>
               
               <div class="analysis">
-                <h3>Analysis:</h3>
-                <pre>{{ currentAnalysis.analysis }}</pre>
+                <h3>Analysis</h3>
+                <pre>{{ formatAnalysis(currentAnalysis?.analysis) }}</pre>
               </div>
 
               <div v-if="currentAnalysis.suggestions" class="suggestions">
@@ -483,6 +483,13 @@ const showMemberDetails = (member: TeamMember) => {
   selectedMember.value = member
   showModal.value = true
 }
+
+const formatAnalysis = (analysis: string | undefined) => {
+  if (!analysis) return '';
+  // Remove redundant "Analysis:" prefix if it exists
+  return analysis.replace(/^Analysis:\s*/, '')
+                .replace(/^INVEST Analysis:\s*/, '');
+}
 </script>
 
 <style scoped>
@@ -576,156 +583,96 @@ textarea, input {
 }
 
 .story-output {
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 4px;
-  margin: 10px 0;
-  color: #333;
+  background-color: #1E1E1E;
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 1rem 0;
 }
 
-.story-output.final {
-  border: 2px solid #4CAF50;
+.story-output h3 {
+  color: #64B5F6;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
-pre {
+.story-output pre {
   white-space: pre-wrap;
   word-wrap: break-word;
-  color: #333;
+  color: rgba(255, 255, 255, 0.87);
+  font-family: inherit;
+  margin: 0.5rem 0 1.5rem 0;
+  line-height: 1.6;
 }
 
-h1, h2 {
-  color: #333;
+.story-output ul {
+  list-style-type: none;
+  padding-left: 1rem;
+  margin: 0.5rem 0 1.5rem 0;
 }
 
-.action-buttons button {
-  padding: 8px 16px;
-  margin: 5px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: #2196F3;
-  color: white;
+.story-output li {
+  color: rgba(255, 255, 255, 0.87);
+  margin-bottom: 0.5rem;
+  position: relative;
+  padding-left: 1rem;
 }
 
-.review-tabs {
+.story-output li:before {
+  content: "•";
+  color: #64B5F6;
+  position: absolute;
+  left: -0.5rem;
+}
+
+.analysis {
   margin-top: 2rem;
 }
 
-.tab-buttons {
-  display: flex;
-  gap: 1rem;
+.analysis h3 {
   margin-bottom: 1rem;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 0.5rem;
 }
 
-.tab-buttons button {
-  padding: 0.5rem 1rem;
-  border: none;
-  background: none;
-  color: #666;
-  cursor: pointer;
-  font-size: 1rem;
-  position: relative;
+.suggestions {
+  margin-top: 2rem;
 }
 
-.tab-buttons button.active {
-  color: #2196F3;
-  font-weight: bold;
+.suggestions ul {
+  padding-left: 0;
 }
 
-.tab-buttons button.active::after {
-  content: '';
-  position: absolute;
-  bottom: -0.5rem;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #2196F3;
+.suggestions li {
+  margin-bottom: 1rem;
 }
 
-.tab-buttons button:disabled {
-  color: #ccc;
-  cursor: not-allowed;
+.suggestions li strong {
+  color: #64B5F6;
+  margin-right: 0.5rem;
 }
 
-.tab-content {
-  animation: fadeIn 0.3s ease-in-out;
+.improved-story {
+  border-left: 3px solid #64B5F6;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.improved-story pre {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.95);
 }
 
-.estimation-circle {
-  position: relative;
-  border: 2px dashed #eee;
-  border-radius: 50%;
+.improved-story ul {
+  margin-top: 1rem;
 }
 
-.average-estimate {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  background: rgba(33, 150, 243, 0.1);
-  padding: 1rem;
-  border-radius: 50%;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+.improved-story li {
+  color: rgba(255, 255, 255, 0.87);
 }
 
-.average-number {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #2196F3;
-}
-
-.average-label {
-  font-size: 0.8rem;
-  color: #666;
-}
-
-.team-member {
-  position: absolute;
-  text-align: center;
-  transition: all 0.3s ease;
-  width: 120px; /* Fixed width to center content */
-}
-
-.member-avatar {
-  margin-bottom: 0.5rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.member-avatar:hover {
-  transform: scale(1.1);
-}
-
-.member-info {
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.member-name {
-  font-weight: bold;
-}
-
-.member-title {
-  color: #666;
-  font-size: 0.7rem;
-}
-
-.member-estimate {
-  color: #2196F3;
-  font-weight: bold;
-  margin-top: 0.2rem;
+.story-generator-title {
+  color: rgba(255, 255, 255, 0.95) !important; /* Almost white */
+  margin-bottom: 2rem;
+  font-weight: 300; /* Light weight for elegance */
+  letter-spacing: 0.5px;
 }
 </style> 

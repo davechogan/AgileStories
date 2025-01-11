@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import TestView from '../views/TestView.vue'
 import TestEstimateView from '../views/TestEstimateView.vue'
+import TestFormatView from '../views/TestFormatView.vue'
+import TestTechReviewView from '../views/TestTechReviewView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,6 +31,16 @@ const router = createRouter({
       name: 'test-estimate',
       component: TestEstimateView,
     },
+    {
+      path: '/test-format',
+      name: 'test-format',
+      component: TestFormatView
+    },
+    {
+      path: '/test-tech-review',
+      name: 'test-tech-review',
+      component: TestTechReviewView
+    }
   ],
 })
 

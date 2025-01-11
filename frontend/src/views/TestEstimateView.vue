@@ -332,12 +332,13 @@ onMounted(() => {
 .average-number {
   font-size: 2rem;
   font-weight: bold;
-  color: #2196F3;
+  color: #64B5F6;
 }
 
 .average-label {
   font-size: 0.8rem;
-  opacity: 0.7;
+  opacity: 0.87;
+  color: rgba(255, 255, 255, 0.87);
 }
 
 .team-member {
@@ -364,20 +365,23 @@ onMounted(() => {
 .member-info {
   font-size: 0.8rem;
   white-space: nowrap;
+  color: rgba(255, 255, 255, 0.87);
 }
 
 .member-name {
   font-weight: bold;
+  color: rgba(255, 255, 255, 0.87);
 }
 
 .member-title {
   opacity: 0.7;
   font-size: 0.7rem;
   margin: 0.2rem 0;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .member-estimate {
-  color: #2196F3;
+  color: #64B5F6;
   font-weight: bold;
 }
 
