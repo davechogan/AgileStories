@@ -67,11 +67,25 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    
+    <!-- Add back button -->
+    <div class="back-button-container">
+      <v-btn 
+        color="primary"
+        @click="router.push('/test/tech')"
+        class="text-uppercase"
+      >
+        Back to Tech Review
+      </v-btn>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // Avatar styles available in DiceBear
 const avatarStyles = [
@@ -437,5 +451,12 @@ onMounted(() => {
 .justification-text {
   line-height: 1.5;
   color: var(--v-medium-emphasis-opacity);
+}
+
+.back-button-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 10;
 }
 </style> 

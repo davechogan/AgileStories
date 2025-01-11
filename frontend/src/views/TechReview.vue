@@ -169,18 +169,16 @@
             <div class="footer-buttons">
               <v-btn 
                 color="success" 
-                prepend-icon="mdi-check-circle"
                 class="mr-4"
-                :disabled="editingStory || editingAC"
+                @click="acceptTechReview"
               >
-                Accept Tech Review
+                ACCEPT TECH REVIEW
               </v-btn>
               <v-btn 
-                color="primary" 
-                prepend-icon="mdi-account-group"
-                :disabled="editingStory || editingAC"
+                color="primary"
+                @click="submitForEstimation"
               >
-                Get Team Estimate
+                SEND FOR ESTIMATION
               </v-btn>
             </div>
             <div class="footer-hint" v-if="editingStory || editingAC">
@@ -246,7 +244,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { mockTechReviewResult } from '@/mocks/mockTechReviewData'
+
+const router = useRouter()
+const loading = ref(false)
 
 // Story editing
 const editingStory = ref(false)
@@ -351,6 +353,34 @@ const getDetailColor = (type: string): string => {
     case 'backend': return 'success'
     case 'database': return 'warning'
     default: return 'primary'
+  }
+}
+
+const acceptTechReview = async () => {
+  loading.value = true
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Just log for now since we don't have the accept endpoint
+    console.log('Tech review accepted')
+    // Don't navigate
+  } catch (error) {
+    console.error('Error accepting tech review:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const submitForEstimation = async () => {
+  loading.value = true
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    router.push('/test/estimate')
+  } catch (error) {
+    console.error('Error submitting for estimation:', error)
+  } finally {
+    loading.value = false
   }
 }
 </script>
