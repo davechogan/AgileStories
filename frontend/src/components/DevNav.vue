@@ -25,11 +25,11 @@ const $route = useRoute()
 
 const routes = [
   { path: '/', label: 'Story Input' },
-  { path: '/test/story', label: 'Test Format' },
-  { path: '/test/agile', label: 'Agile Review' },
-  { path: '/test/tech', label: 'Tech Review' },
-  { path: '/test/techreview', label: 'Old Tech Review' },
-  { path: '/test/estimate', label: 'Estimation' }
+  { path: '/story', label: 'Test Format' },
+  { path: '/agile', label: 'Agile Review' },
+  { path: '/tech', label: 'Tech Review' },
+  { path: '/techreview', label: 'Old Tech Review' },
+  { path: '/estimate', label: 'Estimation' }
 ]
 </script>
 

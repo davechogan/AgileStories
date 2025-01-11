@@ -72,7 +72,7 @@
     <div class="back-button-container">
       <v-btn 
         color="primary"
-        @click="router.push('/test/tech')"
+        @click="router.push('/tech')"
         class="text-uppercase"
       >
         Back to Tech Review

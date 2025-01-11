@@ -374,9 +374,8 @@ const acceptTechReview = async () => {
 const submitForEstimation = async () => {
   loading.value = true
   try {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
-    router.push('/test/estimate')
+    router.push('/estimate')
   } catch (error) {
     console.error('Error submitting for estimation:', error)
   } finally {

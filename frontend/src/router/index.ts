@@ -15,28 +15,28 @@ const router = createRouter({
       component: StoryInput
     },
     {
-      path: '/test/story',
-      name: 'test-story',
+      path: '/story',
+      name: 'story',
       component: TestFormatView
     },
     {
-      path: '/test/agile',
-      name: 'test-agile',
+      path: '/agile',
+      name: 'agile',
       component: AgileReview
     },
     {
-      path: '/test/tech',
-      name: 'test-tech',
+      path: '/tech',
+      name: 'tech',
       component: TechReview
     },
     {
-      path: '/test/techreview',
-      name: 'test-tech-review',
+      path: '/techreview',
+      name: 'tech-review',
       component: TestTechReviewView
     },
     {
-      path: '/test/estimate',
-      name: 'test-estimate',
+      path: '/estimate',
+      name: 'estimate',
       component: TestEstimateView
     }
   ]

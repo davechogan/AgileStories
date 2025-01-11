@@ -203,7 +203,7 @@ const submitForTechReview = async () => {
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Navigate to new route
-    router.push('/TechReview')
+    router.push('/tech')
     return true
   } catch (error) {
     console.error('Error submitting for tech review:', error)

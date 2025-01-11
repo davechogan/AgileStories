@@ -88,10 +88,9 @@
           <div class="footer-content">
             <v-btn 
               color="primary" 
-              prepend-icon="mdi-send"
-              :disabled="editingStory || editingAC"
+              @click="router.push('/agile')"
             >
-              Send for Tech Review
+              Continue to Agile Review
             </v-btn>
             <div class="footer-hint" v-if="editingStory || editingAC">
               Save your changes to enable sending for review

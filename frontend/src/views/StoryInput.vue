@@ -139,7 +139,7 @@ const submitStory = async () => {
   )
 
   if (success) {
-    router.push('/AgileReview')
+    router.push('/story')
   }
 }
 </script>
