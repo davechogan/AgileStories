@@ -91,29 +91,25 @@ class StoryAnalyzer:
         Process user feedback and move to next step
         """
         try:
+            print("\n=== Processing User Feedback ===")
+            print(f"Current status: {result.status}")
+            print(f"Approved: {approved}")
+            
             if not approved and edited_story:
                 print(f"\nRestarting with edited story: {edited_story.text}")
                 return self.start_analysis(edited_story)
                 
             if approved and result.status == AnalysisStatus.AGILE_REVIEW:
-                # Get the improved story from the Agile Coach analysis
-                story_for_review = result.improved_story if result.improved_story else result.original_story
-                print("\nUser approved Agile review.")
-                print(f"Original story: {result.original_story.text}")
-                print(f"Improved story: {story_for_review.text}")
-                print(f"Improved acceptance criteria: {story_for_review.acceptance_criteria}")
-                
-                # Remove any "Story:" prefix if present
-                if story_for_review.text.startswith("Story:"):
-                    story_for_review.text = story_for_review.text[6:].strip()
-                
-                # Remove any "- " prefix from acceptance criteria
-                story_for_review.acceptance_criteria = [
-                    ac.lstrip("- ").strip() 
-                    for ac in story_for_review.acceptance_criteria
-                ]
-                
-                return self.technical_review(story_for_review)
+                # Make sure we use the improved story from Agile Coach
+                if result.improved_story:
+                    print("\nUser approved Agile review. Using improved story:")
+                    print(f"Original story: {result.original_story.text}")
+                    print(f"Improved story: {result.improved_story.text}")
+                    print(f"Enhanced acceptance criteria: {result.improved_story.acceptance_criteria}")
+                    return self.technical_review(result.improved_story)
+                else:
+                    print("\nNo improved story found, using original")
+                    return self.technical_review(result.original_story)
                 
             if approved and result.status == AnalysisStatus.TECHNICAL_REVIEW:
                 print("\nUser approved Technical review. Analysis complete!")
@@ -144,8 +140,9 @@ class StoryAnalyzer:
         Perform technical review with Senior Dev
         """
         try:
-            print(f"\nStarting technical review with story: {story.text}")  # Debug log
+            print(f"\nStarting technical review with story: {story.text}")
             
+            # Create the event structure
             event = {
                 'body': {
                     'story': story.text,
@@ -154,9 +151,10 @@ class StoryAnalyzer:
                 }
             }
             
-            print(f"Sending event to SeniorDev: {json.dumps(event, indent=2)}")  # Debug log
+            # Import and call the Lambda handler directly
+            from ai.agents.senior_dev.lambda_handler import lambda_handler
+            tech_response = lambda_handler(event, None)
             
-            tech_response = self._invoke_lambda('SeniorDevFunction', event)
             return self._parse_lambda_response(tech_response, story, AnalysisStatus.TECHNICAL_REVIEW)
             
         except Exception as e:
