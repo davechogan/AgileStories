@@ -48,93 +48,112 @@
       </button>
     </div>
 
-    <!-- Agile Coach Review -->
-    <div v-if="currentStep === 'agileCoachReview'" class="workflow-step">
-      <h2>Agile Coach Review</h2>
-      <div v-if="currentAnalysis" class="story-output">
-        <div v-if="currentAnalysis.improved_story" class="improved-story">
-          <h3>Improved Story:</h3>
-          <pre>{{ currentAnalysis.improved_story.text }}</pre>
+    <!-- Review Tabs - Show when not in input step -->
+    <div v-if="currentStep !== 'input'" class="review-tabs">
+      <div class="tab-buttons">
+        <button 
+          @click="activeTab = 'agileCoach'"
+          :class="{ active: activeTab === 'agileCoach' }"
+          :disabled="currentStep === 'input'"
+        >
+          Agile Coach Review
+        </button>
+        <button 
+          @click="activeTab = 'technical'"
+          :class="{ active: activeTab === 'technical' }"
+          :disabled="currentStep === 'input' || currentStep === 'agileCoachReview'"
+        >
+          Technical Review
+        </button>
+        <button 
+          @click="activeTab = 'estimation'"
+          :class="{ active: activeTab === 'estimation' }"
+          :disabled="currentStep === 'input' || currentStep === 'agileCoachReview' || currentStep === 'technicalReview'"
+        >
+          Team Estimation
+        </button>
+      </div>
+
+      <!-- Agile Coach Tab -->
+      <div v-show="activeTab === 'agileCoach'" class="tab-content">
+        <div class="workflow-step">
+          <h2>Agile Coach Review</h2>
+          <div v-if="currentAnalysis" class="story-output">
+            <div v-if="currentAnalysis.improved_story" class="improved-story">
+              <h3>Improved Story:</h3>
+              <pre>{{ currentAnalysis.improved_story.text }}</pre>
+              
+              <h3>Enhanced Acceptance Criteria:</h3>
+              <ul>
+                <li v-for="(criterion, index) in currentAnalysis.improved_story.acceptance_criteria" 
+                    :key="index">
+                  {{ criterion }}
+                </li>
+              </ul>
+            </div>
+            
+            <div class="analysis">
+              <h3>Analysis:</h3>
+              <pre>{{ currentAnalysis.analysis }}</pre>
+            </div>
+
+            <div v-if="currentAnalysis.suggestions" class="suggestions">
+              <h3>Suggestions:</h3>
+              <ul>
+                <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
+                    :key="key">
+                  <strong>{{ key }}:</strong> {{ suggestion }}
+                </li>
+              </ul>
+            </div>
+          </div>
           
-          <h3>Enhanced Acceptance Criteria:</h3>
-          <ul>
-            <li v-for="(criterion, index) in currentAnalysis.improved_story.acceptance_criteria" 
-                :key="index">
-              {{ criterion }}
-            </li>
-          </ul>
-        </div>
-        
-        <div class="analysis">
-          <h3>Analysis:</h3>
-          <pre>{{ currentAnalysis.analysis }}</pre>
-        </div>
-
-        <div v-if="currentAnalysis.suggestions" class="suggestions">
-          <h3>Suggestions:</h3>
-          <ul>
-            <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
-                :key="key">
-              <strong>{{ key }}:</strong> {{ suggestion }}
-            </li>
-          </ul>
+          <div class="action-buttons">
+            <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
+            <button @click="approveAnalysis" :disabled="isProcessing">Accept & Continue</button>
+          </div>
         </div>
       </div>
-      
-      <div class="action-buttons">
-        <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
-        <button @click="approveAnalysis" :disabled="isProcessing">Accept & Continue</button>
-      </div>
-    </div>
 
-    <!-- Technical Review -->
-    <div v-if="currentStep === 'technicalReview'" class="workflow-step">
-      <h2>Technical Review</h2>
-      <div v-if="currentAnalysis" class="story-output">
-        <div class="analysis">
-          <h3>Technical Analysis:</h3>
-          <pre>{{ currentAnalysis.analysis }}</pre>
-        </div>
-        
-        <div v-if="currentAnalysis.suggestions" class="suggestions">
-          <h3>Technical Suggestions:</h3>
-          <ul>
-            <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
-                :key="key">
-              <strong>{{ key }}:</strong> {{ suggestion }}
-            </li>
-          </ul>
-        </div>
+      <!-- Technical Review Tab -->
+      <div v-show="activeTab === 'technical'" class="tab-content">
+        <div class="workflow-step">
+          <h2>Technical Review</h2>
+          <div v-if="currentAnalysis" class="story-output">
+            <div class="analysis">
+              <h3>Technical Analysis:</h3>
+              <pre>{{ currentAnalysis.analysis }}</pre>
+            </div>
+            
+            <div v-if="currentAnalysis.suggestions" class="suggestions">
+              <h3>Technical Suggestions:</h3>
+              <ul>
+                <li v-for="(suggestion, key) in currentAnalysis.suggestions" 
+                    :key="key">
+                  <strong>{{ key }}:</strong> {{ suggestion }}
+                </li>
+              </ul>
+            </div>
 
-        <div class="improved-story">
-          <h3>Final Story:</h3>
-          <pre>{{ currentAnalysis.improved_story?.text }}</pre>
+            <div class="improved-story">
+              <h3>Final Story:</h3>
+              <pre>{{ currentAnalysis.improved_story?.text }}</pre>
+              
+              <h3>Final Acceptance Criteria:</h3>
+              <ul>
+                <li v-for="(criterion, index) in currentAnalysis.improved_story?.acceptance_criteria" 
+                    :key="index">
+                  {{ criterion }}
+                </li>
+              </ul>
+            </div>
+          </div>
           
-          <h3>Final Acceptance Criteria:</h3>
-          <ul>
-            <li v-for="(criterion, index) in currentAnalysis.improved_story?.acceptance_criteria" 
-                :key="index">
-              {{ criterion }}
-            </li>
-          </ul>
+          <div class="action-buttons">
+            <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
+            <button @click="approveAnalysis" :disabled="isProcessing">Accept & Complete</button>
+          </div>
         </div>
-      </div>
-      
-      <div class="action-buttons">
-        <button @click="rejectAnalysis" :disabled="isProcessing">Reject & Edit</button>
-        <button @click="approveAnalysis" :disabled="isProcessing">Accept & Complete</button>
-      </div>
-    </div>
-
-    <!-- Debug Section -->
-    <div class="debug-section">
-      <button @click="showDebug = !showDebug" class="debug-toggle">
-        {{ showDebug ? 'Hide' : 'Show' }} Debug Info
-      </button>
-      <div v-if="showDebug" class="debug-output">
-        <h3>Current Status: {{ currentAnalysis?.status || 'No analysis' }}</h3>
-        <h3>Raw Response:</h3>
-        <pre>{{ debugOutput }}</pre>
       </div>
     </div>
   </div>
@@ -159,16 +178,24 @@ interface AnalysisResult {
   timestamp: string;
 }
 
+interface TeamMember {
+  id: number;
+  name: string;
+  title: string;
+  initials: string;
+  color: string;
+  estimate: number;
+  justification: string;
+}
+
 const currentStep = ref('input')
 const storyInput = ref('')
 const acceptanceCriteria = ref([''])
 const contextInput = ref('')
 const isProcessing = ref(false)
 const currentAnalysis = ref<AnalysisResult | null>(null)
-const showDebug = ref(false)
-const debugOutput = ref('')
-
-const API_BASE_URL = 'http://localhost:8000'
+const activeTab = ref('agileCoach')
+const teamEstimates = ref<TeamMember[]>([])
 
 const isValidInput = computed(() => {
   return storyInput.value.trim().length > 0 &&
@@ -211,12 +238,10 @@ const startAnalysis = async () => {
     }
 
     const result = await response.json()
-    debugOutput.value = JSON.stringify(result, null, 2)
     currentAnalysis.value = result
     currentStep.value = 'agileCoachReview'
   } catch (error) {
     console.error('Analysis error:', error)
-    debugOutput.value = `Error: ${error.message}`
   } finally {
     isProcessing.value = false
   }
@@ -246,7 +271,6 @@ const rejectAnalysis = async () => {
     currentStep.value = 'input'
   } catch (error) {
     console.error('Feedback error:', error)
-    debugOutput.value = `Error: ${error.message}`
   }
 }
 
@@ -254,42 +278,100 @@ const approveAnalysis = async () => {
   if (!currentAnalysis.value) return
   
   try {
-    const requestBody = {
-      analysis_result: currentAnalysis.value,
-      approved: true
-    }
-    
-    console.log('Sending feedback - Full request body:', JSON.stringify(requestBody, null, 2))
-
-    const response = await fetch(`${API_BASE_URL}/api/analyze/feedback`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('Feedback API Error - Full details:', {
-        status: response.status,
-        data: errorData,
-        sentData: requestBody
+    if (currentStep.value === 'technicalReview') {
+      // Send to team for day estimation
+      const response = await fetch(`${API_BASE_URL}/api/estimate/days`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          story: currentAnalysis.value.improved_story
+        })
       })
-      throw new Error(`API Error: ${response.status}`)
-    }
 
-    const result = await response.json()
-    currentAnalysis.value = result
-    if (result.status === 'technical_review') {
-      currentStep.value = 'technicalReview'
-    } else if (result.status === 'complete') {
-      currentStep.value = 'complete'
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`)
+      }
+
+      const estimationResult = await response.json()
+      processTeamEstimates(estimationResult)
+      
+      // Update UI state
+      currentStep.value = 'estimation'
+      activeTab.value = 'estimation'
+    } else {
+      // Handle other approval steps
+      const response = await fetch(`${API_BASE_URL}/api/analyze/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          analysis_result: currentAnalysis.value,
+          approved: true
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`)
+      }
+
+      const result = await response.json()
+      currentAnalysis.value = result
+      
+      if (result.status === 'technical_review') {
+        currentStep.value = 'technicalReview'
+        activeTab.value = 'technical'
+      }
     }
   } catch (error) {
-    console.error('Feedback error:', error)
-    debugOutput.value = `Error: ${error.message}`
+    console.error('Analysis error:', error)
   }
+}
+
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+const getRandomColor = (): string => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+    '#D4A5A5', '#7FB069', '#E6B89C', '#9B7EDE'
+  ]
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+const getPositionStyle = (index: number, total: number) => {
+  const angle = (index / total) * 2 * Math.PI - Math.PI / 2 // Start from top
+  const radius = 180 // Increased radius for 8 people
+  const x = Math.cos(angle) * radius
+  const y = Math.sin(angle) * radius
+  return {
+    transform: `translate(${x}px, ${y}px)`
+  }
+}
+
+const processTeamEstimates = (estimationData: any) => {
+  teamEstimates.value = estimationData.team_estimates.map((member: any, index: number) => ({
+    id: index + 1,
+    name: member.name,
+    title: member.role,
+    initials: getInitials(member.name),
+    color: getRandomColor(),
+    estimate: member.estimate,
+    justification: member.justification
+  }))
+}
+
+const circleStyles = {
+  width: '500px',
+  height: '500px'
 }
 </script>
 
@@ -415,115 +497,68 @@ h1, h2 {
   color: white;
 }
 
-.debug-section {
+.review-tabs {
   margin-top: 2rem;
-  padding: 1rem;
-  border-top: 1px solid #ddd;
 }
 
-.debug-toggle {
-  background: #666;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.debug-output {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f8f8f8;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.debug-output pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: monospace;
-  font-size: 0.9rem;
-  color: #333;
-  background: #fff;
-  padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #eee;
-}
-
-.debug-output h3 {
-  margin-top: 0;
-  color: #666;
-  font-size: 1rem;
-}
-
-.improved-story, .analysis, .suggestions {
-  margin-bottom: 1.5rem;
-}
-
-.improved-story h3, .analysis h3, .suggestions h3 {
-  color: #2196F3;
-  margin-bottom: 0.5rem;
-}
-
-.suggestions ul {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-.suggestions li {
-  margin-bottom: 0.5rem;
-}
-
-.suggestions strong {
-  color: #666;
-}
-
-.analysis h3, .suggestions h3, .improved-story h3 {
-  color: #2196F3;
-  margin-bottom: 0.5rem;
-}
-
-.suggestions ul {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-.suggestions li {
-  margin-bottom: 0.5rem;
-}
-
-.suggestions strong {
-  color: #666;
-}
-
-.action-buttons {
-  margin-top: 1rem;
+.tab-buttons {
   display: flex;
   gap: 1rem;
-  justify-content: flex-end;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
 }
 
-.action-buttons button {
-  padding: 8px 16px;
+.tab-buttons button {
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 4px;
+  background: none;
+  color: #666;
   cursor: pointer;
-  background-color: #2196F3;
-  color: white;
+  font-size: 1rem;
+  position: relative;
 }
 
-.action-buttons button:disabled {
-  background-color: #ccc;
+.tab-buttons button.active {
+  color: #2196F3;
+  font-weight: bold;
+}
+
+.tab-buttons button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #2196F3;
+}
+
+.tab-buttons button:disabled {
+  color: #ccc;
   cursor: not-allowed;
 }
 
-pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  background: white;
-  padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #eee;
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.estimation-circle {
+  position: relative;
+  margin: 3rem auto;  /* Increased margin */
+  border: 2px dashed #eee;
+  border-radius: 50%;
+}
+
+/* Add title display */
+.member-title {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 0.2rem;
 }
 </style> 

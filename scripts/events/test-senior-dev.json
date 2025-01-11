@@ -1,0 +1,13 @@
+{
+  "body": {
+    "story": {
+      "text": "As an administrator I want to enforce password resets every 90 days",
+      "acceptance_criteria": [
+        "Users must receive notification 7 days before expiration",
+        "Passwords must meet security requirements"
+      ],
+      "context": "SOC compliance requirement",
+      "version": 1
+    }
+  }
+} 

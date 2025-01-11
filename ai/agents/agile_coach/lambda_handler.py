@@ -91,24 +91,17 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         print("AgileCoach Lambda started")
         print(f"Event received: {json.dumps(event, indent=2)}")
         
-        # Debug environment variables
-        print(f"OpenAI Key exists: {bool(os.getenv('OPENAI_API_KEY'))}")
-        print(f"OpenAI Org exists: {bool(os.getenv('OPENAI_ORG_ID'))}")
-        
         # Get the story details from the event body
         if isinstance(event.get('body'), str):
             body = json.loads(event.get('body', '{}'))
         else:
             body = event.get('body', {})
             
-        print(f"Parsed body: {json.dumps(body, indent=2)}")
-        
         story_text = body.get('story', '')
         acceptance_criteria = body.get('acceptance_criteria', [])
         context = body.get('context', '')
         
         if not story_text:
-            print("No story text provided")
             return {
                 'statusCode': 400,
                 'body': json.dumps({
@@ -121,15 +114,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         openai.api_key = os.getenv('OPENAI_API_KEY')
         openai.organization = os.getenv('OPENAI_ORG_ID')
         
-        print("Making OpenAI API call...")
-        print(f"Using prompt template:\n{AGILE_COACH_PROMPT}")
-        
         formatted_prompt = AGILE_COACH_PROMPT.format(
             story=story_text,
             acceptance_criteria="\n".join(f"- {ac}" for ac in acceptance_criteria),
             context=context
         )
-        print(f"Formatted prompt:\n{formatted_prompt}")
         
         # Create the analysis
         response = openai.ChatCompletion.create(
@@ -145,10 +134,43 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         analysis = response.choices[0].message.content
         print(f"OpenAI Response: {analysis}")
         
+        # Extract improved story and acceptance criteria
+        improved_story = None
+        improved_ac = []
+        
+        story_marker = "\nImproved Story:\n"
+        ac_marker = "\nEnhanced Acceptance Criteria:\n"
+        
+        story_start = analysis.find(story_marker)
+        if story_start != -1:
+            story_start += len(story_marker)
+            story_end = analysis.find(ac_marker, story_start)
+            if story_end != -1:
+                improved_story = analysis[story_start:story_end].strip()
+        
+        ac_start = analysis.find(ac_marker)
+        if ac_start != -1:
+            ac_start += len(ac_marker)
+            ac_end = analysis.find("\nAdditional Suggestions:", ac_start)
+            if ac_end == -1:
+                ac_end = len(analysis)
+            ac_text = analysis[ac_start:ac_end].strip()
+            improved_ac = [
+                line.strip('- ').strip()
+                for line in ac_text.split('\n')
+                if line.strip('- ').strip()
+            ]
+        
         return {
             'statusCode': 200,
             'body': json.dumps({
                 'analysis': analysis,
+                'improved_story': {
+                    'text': improved_story,
+                    'acceptance_criteria': improved_ac,
+                    'context': context,
+                    'version': 1
+                } if improved_story else None,
                 'suggestions': {},
                 'status': 'success'
             })

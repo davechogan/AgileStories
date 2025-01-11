@@ -3,6 +3,7 @@ import json
 from typing import Dict, Any
 import openai
 from dotenv import load_dotenv
+from pathlib import Path
 
 SENIOR_DEV_PROMPT = """You are an experienced Senior Developer reviewing user stories.
 Given the following user story and acceptance criteria, please review it for technical feasibility and implementation details:
@@ -37,7 +38,12 @@ Implementation Details:
 def get_openai_key():
     """Get OpenAI key from env.json"""
     try:
-        with open('env.json', 'r') as f:
+        # Get project root (similar to test_feedback.py)
+        project_root = Path(__file__).parents[3].absolute()
+        env_path = project_root / 'env.json'
+        print(f"Looking for env.json at: {env_path}")
+        
+        with open(env_path) as f:
             env_vars = json.load(f)
             return env_vars['SeniorDevFunction']['OPENAI_API_KEY']
     except Exception as e:

@@ -5,8 +5,10 @@ setup(
     version="0.1",
     packages=find_packages(),
     install_requires=[
-        'boto3',
-        'python-dotenv',
-        'openai'
-    ]
+        "fastapi",
+        "uvicorn",
+        "python-multipart",
+        "pydantic",
+        "boto3"
+    ],
 ) 

@@ -14,7 +14,7 @@
       <!-- Main content -->
       <v-container>
         <router-view />
-        <RouterDebug />
+        <RouterDebug v-if="false" />
       </v-container>
     </v-main>
   </v-app>
