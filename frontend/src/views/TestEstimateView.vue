@@ -1,9 +1,5 @@
 <template>
   <div class="test-estimate">
-    <div class="header-container">
-      <h1 class="text-h4 page-title">Estimation Layout Test</h1>
-    </div>
-    
     <!-- Avatar style controls -->
     <div class="avatar-controls">
       <v-btn-group vertical density="compact">
@@ -40,6 +36,37 @@
         </div>
       </div>
     </div>
+    
+    <!-- Add modal dialog -->
+    <v-dialog v-model="showDialog" max-width="400">
+      <v-card>
+        <v-card-title class="member-dialog-title">
+          <v-avatar size="48" class="mr-4">
+            <v-img :src="selectedMember?.avatarUrl"></v-img>
+          </v-avatar>
+          {{ selectedMember?.name }}
+        </v-card-title>
+        
+        <v-card-text>
+          <div class="member-dialog-role">{{ selectedMember?.title }}</div>
+          <div class="member-dialog-estimate">
+            <span class="estimate-label">Estimate:</span>
+            <span class="estimate-value">{{ selectedMember?.estimate }} days</span>
+          </div>
+          <div class="mt-4">
+            <div class="justification-label">Justification:</div>
+            <div class="justification-text">
+              {{ selectedMember?.justification || 'No justification provided.' }}
+            </div>
+          </div>
+        </v-card-text>
+        
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="showDialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -87,6 +114,7 @@ interface TeamMember {
   title: string
   estimate: number
   avatarUrl: string
+  justification?: string
 }
 
 const mockTeamEstimates = ref<TeamMember[]>([
@@ -95,35 +123,64 @@ const mockTeamEstimates = ref<TeamMember[]>([
     name: 'Sarah Chen',
     title: 'Senior Developer Lead',
     estimate: 15,
-    avatarUrl: ''
+    avatarUrl: '',
+    justification: 'Need to account for integration testing and security review. Previous similar features took around 2 weeks.'
   },
   {
     id: 2,
     name: 'Jamie Lee',
     title: 'Junior QA Analyst',
     estimate: 7,
-    avatarUrl: ''
+    avatarUrl: '',
+    justification: 'Based on test coverage requirements and new test cases needed.'
   },
   {
     id: 3,
     name: 'Alex Thompson',
     title: 'Senior Developer',
     estimate: 9,
-    avatarUrl: ''
+    avatarUrl: '',
+    justification: 'Complex backend changes required. Need to refactor existing code.'
   },
   {
     id: 4,
     name: 'Michael Rodriguez',
     title: 'Senior QA Analyst',
     estimate: 5,
-    avatarUrl: ''
+    avatarUrl: '',
+    justification: 'Mostly regression testing needed, automation scripts can be reused.'
   },
   {
     id: 5,
     name: 'Emily Parker',
     title: 'Mid-level Developer',
     estimate: 7,
-    avatarUrl: ''
+    avatarUrl: '',
+    justification: 'Frontend changes are straightforward but need time for proper unit tests.'
+  },
+  {
+    id: 6,
+    name: 'David Kim',
+    title: 'UX Designer',
+    estimate: 6,
+    avatarUrl: '',
+    justification: 'Need to create and validate new interaction patterns with users.'
+  },
+  {
+    id: 7,
+    name: 'Lisa Wang',
+    title: 'Backend Developer',
+    estimate: 12,
+    avatarUrl: '',
+    justification: 'Database schema changes and API modifications required.'
+  },
+  {
+    id: 8,
+    name: 'Marcus Johnson',
+    title: 'DevOps Engineer',
+    estimate: 8,
+    avatarUrl: '',
+    justification: 'Need to update deployment pipeline and add new monitoring.'
   }
 ])
 
@@ -165,7 +222,7 @@ const circleStyles = computed(() => {
 // Calculate position for each team member
 const getPositionStyle = (index: number, total: number) => {
   const angle = (index * 360) / total - 90 // Start from top
-  const radius = 200 // Fixed radius in pixels instead of percentage
+  const radius = 250 // Increased from 200 to 250 for better spacing
   
   // Get initial random position if it exists
   const initialPos = initialPositions.value.get(mockTeamEstimates.value[index].id)
@@ -209,9 +266,14 @@ const cycleAvatarStyle = () => {
   regenerateAvatars()
 }
 
-// Show member details (placeholder)
+// Add these refs for dialog control
+const showDialog = ref(false)
+const selectedMember = ref<TeamMember | null>(null)
+
+// Update the showMemberDetails function
 const showMemberDetails = (member: TeamMember) => {
-  console.log('Show details for:', member.name)
+  selectedMember.value = member
+  showDialog.value = true
 }
 
 // Initialize avatars on mount
@@ -228,20 +290,6 @@ onMounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-}
-
-.header-container {
-  position: absolute;
-  left: 2rem;
-  top: 1rem;
-  width: 200px;
-}
-
-.page-title {
-  text-align: left;
-  font-size: 1.5rem !important;
-  line-height: 1.2 !important;
-  margin: 0 !important;
 }
 
 .avatar-controls {
@@ -347,5 +395,43 @@ onMounted(() => {
   .current-style {
     font-size: 0.7rem;
   }
+}
+
+.member-dialog-title {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+}
+
+.member-dialog-role {
+  color: var(--v-medium-emphasis-opacity);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.member-dialog-estimate {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.estimate-label {
+  font-weight: 500;
+}
+
+.estimate-value {
+  color: var(--v-theme-primary);
+  font-weight: bold;
+}
+
+.justification-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.justification-text {
+  line-height: 1.5;
+  color: var(--v-medium-emphasis-opacity);
 }
 </style> 
